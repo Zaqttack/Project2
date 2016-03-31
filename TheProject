@@ -1,0 +1,260 @@
+import java.awt.*;
+import java.util.*;
+
+public class Project2 {
+   public static final int 
+      PANEL_WIDTH=300,
+      PANEL_HEIGHT=300,
+      SLEEP_TIME=50,
+      SHOOTER_SIZE=20,
+      TARGET_SIZE=20,
+      GUN_SIZE=10,
+      SHOOTER_POSITION_Y = PANEL_HEIGHT-SHOOTER_SIZE,
+      SHOOTER_INITIAL_POSITION_X = PANEL_WIDTH/2-SHOOTER_SIZE/2,
+      TARGET_POSITION_Y=50,
+      KEY_SPACE=32,
+      KEY_PAGE_UP=33,
+      KEY_HOME=36,
+      KEY_LEFT_ARROW=37,
+      KEY_UP_ARROW=38,
+      KEY_RIGHT_ARROW=39,
+      KEY_DOWN_ARROW=40,
+      MISSILE_SIZE=2,
+      TARGET_DELTA_X=1;
+   public static final Color 
+      SHOOTER_COLOR=Color.RED,
+      TARGET_COLOR=Color.BLUE,
+      BACKGROUND_COLOR=Color.WHITE,
+      MISSILE_COLOR=Color.BLACK;
+   static int
+      shooterPositionX,
+      gunPositionX,
+      gunPositionY,
+      targetPositionX,
+      hitCount,
+      targetDeltaX;
+   static double
+      missilePositionX,
+      missilePositionY,
+      missileDeltaX,
+      missileDeltaY,
+      MISSILE_SPEED,
+      randomNum;
+   static boolean
+      missileActive;
+   static Random
+      randNum;
+   
+   //main method
+   public static void main(String[] args) {
+      DrawingPanel panel = new DrawingPanel(PANEL_WIDTH, PANEL_HEIGHT);
+      Graphics g = panel.getGraphics();
+      initialize();
+      startGame(panel, g);
+   }
+   
+   //initializing method
+   public static void initialize() { 
+      shooterPositionX=SHOOTER_INITIAL_POSITION_X;
+      gunPositionX=0;
+      gunPositionY=GUN_SIZE;
+      targetPositionX=PANEL_WIDTH/2-TARGET_SIZE/2;
+      missileActive=false;
+      missilePositionX=shooterPositionX+10;
+      missilePositionY=SHOOTER_POSITION_Y;
+      missileDeltaX=0;
+      missileDeltaY=0;
+      MISSILE_SPEED=1;
+      hitCount=0;
+      targetDeltaX=0;
+      randomNum=0;
+   }
+   
+   //delaying start and calling other method
+   public static void startGame(DrawingPanel panel, Graphics g) {
+      for (int i = 0; i <=10000; i++) {
+         panel.sleep(SLEEP_TIME);
+         handleKeys(panel,g);
+         moveTarget(g);
+         drawAll(g);
+         moveMissile(g);
+      }
+   }
+   
+   //draws all shaps and lines and prints text
+   public static void drawAll(Graphics g) {
+      String stars = ("");
+      
+      g.setColor(Color.BLACK);
+      g.drawString("Project 2 by Zaquariah Holland", 10, 15);
+      for (int i = 1; i<=hitCount;i++) {
+         stars+=("*");
+      }
+      g.drawString("Hits: "+stars,10,30);
+      drawShooter(g,SHOOTER_COLOR);
+      drawTarget(g,TARGET_COLOR);
+   }
+   
+   //draws the oval/line
+   public static void drawShooter(Graphics g, Color c) {
+      g.setColor(c);
+      g.fillOval(shooterPositionX,
+                 SHOOTER_POSITION_Y,
+                 SHOOTER_SIZE,SHOOTER_SIZE);
+      g.drawLine(shooterPositionX+gunPositionX+10,      //top of gun
+                 SHOOTER_POSITION_Y-SHOOTER_SIZE/2,
+                 shooterPositionX+10,                   //bottom of gun
+                 SHOOTER_POSITION_Y);
+   }
+   
+   //draw blue target
+   public static void drawTarget(Graphics g, Color c) {
+      g.setColor(c);
+      g.fillOval(targetPositionX,TARGET_POSITION_Y,TARGET_SIZE,TARGET_SIZE);
+      g.drawLine(targetPositionX-10,TARGET_POSITION_Y+30,targetPositionX+TARGET_SIZE+10,TARGET_POSITION_Y+30);
+   }
+   
+   //moving the shooter
+   public static void moveShooter(Graphics g, int deltaX) {
+      drawShooter(g,BACKGROUND_COLOR);
+      shooterPositionX=shooterPositionX+deltaX;
+      missilePositionX=missilePositionX+deltaX;
+      drawShooter(g,SHOOTER_COLOR);
+   }
+   
+   //moves shooter's gun
+   public static void moveGun(Graphics g, int deltaX) {
+      drawShooter(g,BACKGROUND_COLOR);
+      gunPositionX=gunPositionX+deltaX;
+      drawShooter(g,SHOOTER_COLOR);
+   }
+   
+   //programming the keys
+   public static void handleKeys(DrawingPanel panel, Graphics g) {
+      int keyCode=panel.getKeyCode();
+      if (keyCode==KEY_SPACE)
+         reset(g);
+      else if (keyCode==KEY_RIGHT_ARROW) {
+         if (shooterPositionX == 280)
+            moveShooter(g,0);
+         else
+            moveShooter(g,1);
+      }
+      else if (keyCode==KEY_LEFT_ARROW) {
+         if (shooterPositionX == 0)
+            moveShooter(g,0);
+         else
+            moveShooter(g,-1);
+      }
+      else if (keyCode==KEY_PAGE_UP) {
+         if (gunPositionX == SHOOTER_SIZE)
+            moveGun(g,0);
+         else
+            moveGun(g,1);
+      }
+      else if (keyCode==KEY_HOME) {
+         if (gunPositionX == -SHOOTER_SIZE)
+            moveGun(g,0);
+         else
+            moveGun(g,-1);
+      }
+      else if (keyCode==KEY_UP_ARROW) {
+         shootMissile(g);
+      }
+   }
+   
+   //sets the missles activeness
+   public static void shootMissile(Graphics g) {
+      if (missileActive==false) {
+         missileActive=true;
+         //had to be intialized within the action
+         missileDeltaX=gunPositionX*MISSILE_SPEED;
+         missileDeltaY=-gunPositionY*MISSILE_SPEED;
+      }
+   }
+   
+   //moves the missle
+   public static void moveMissile(Graphics g) {
+      if (missileActive==true) {
+         drawMissile(g,BACKGROUND_COLOR);
+         missilePositionX += missileDeltaX;
+         missilePositionY += missileDeltaY;
+         drawMissile(g,MISSILE_COLOR);
+         
+         if (missilePositionX < 0)
+            missileDeltaX = Math.abs(missileDeltaX);
+         if (missilePositionX > PANEL_WIDTH)
+            missileDeltaX = -Math.abs(missileDeltaX);
+         if (missilePositionY < 0)
+            missileDeltaY = Math.abs(missileDeltaY);
+         if (missilePositionY > PANEL_HEIGHT) {
+            drawMissile(g,BACKGROUND_COLOR);
+            missileActive=false;
+            missilePositionX=shooterPositionX+10;
+            missilePositionY=SHOOTER_POSITION_Y;
+         }
+         else {
+            int X=(int)missilePositionX;
+            int Y=(int)missilePositionY;
+            if (detectHitTarget(X,Y,MISSILE_SIZE,targetPositionX,TARGET_POSITION_Y,TARGET_SIZE) == true) {
+               drawMissile(g,BACKGROUND_COLOR);
+               missileActive=false;
+               missilePositionX=shooterPositionX+10;
+               missilePositionY=SHOOTER_POSITION_Y;
+               hitCount += 1;
+            }
+         }
+      }
+   }
+   
+   //resets game
+   public static void reset(Graphics g) {
+      g.setColor(Color.WHITE);
+      g.fillRect(0,0,300,300);
+      initialize();
+   }
+   
+   //detecting missile to target hits
+   public static boolean detectHitTarget(int x1, int y1, int r1, int x2, int y2, int r2) {
+      double xx = x1-(x2+r2), 
+         yy = y1-(y2+r2), 
+         xCub = Math.pow(xx,2), 
+         yCub = Math.pow(yy,2), 
+         xySq = Math.sqrt(xCub + yCub);
+      int r3 = r1+r2;
+//      if((Math.sqrt(Math.pow(x1-x2),2)+Math.pow((y1-y2),2)) <= (r1+r2))
+      if (xySq <= r3)
+         return true;
+      else
+         return false;
+   }
+   
+   //drawing the missle
+   public static void drawMissile(Graphics g, Color c) {
+      int
+         X = (int)missilePositionX,
+         Y = (int)missilePositionY;
+      g.setColor(c);
+      g.fillOval(X,Y,MISSILE_SIZE,MISSILE_SIZE);
+   }
+   
+   //moving the target randomly
+   public static void moveTarget(Graphics g) {
+      randomNum=Math.random();
+      
+      drawTarget(g,BACKGROUND_COLOR);
+      targetPositionX +=targetDeltaX;
+      drawTarget(g,TARGET_COLOR);
+      
+      if (randomNum > .98)
+         targetDeltaX=0;
+      else if (randomNum > .96)
+         targetDeltaX=1;
+      else if (randomNum > .94)
+         targetDeltaX=-1;
+      if (targetPositionX+TARGET_SIZE > 300)
+         targetDeltaX=-1;
+      if (targetPositionX < 0)
+         targetDeltaX=1;
+   }
+}
